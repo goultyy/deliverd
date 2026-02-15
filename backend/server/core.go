@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -32,5 +33,5 @@ func get_db() (*sql.DB, error) {
 }
 
 func get_epoch() int {
-	return int((float64)(sql.NullTime{}.Time.Unix()))
+	return int(time.Now().Unix())
 }

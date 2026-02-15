@@ -17,6 +17,8 @@ public/         - public facing content
 ```
 Obviously, this is not complete and will be added to in later weeks/months.
 
+Files containing public facing api code will be titled `*.front.go`, functions in the form `h_*` are handlers for the api, and structures in the form `B_*` are body elements, to be expected in certain endpoints.
+
 ### License
 This code follows the "Creative Commons Attribution-NonCommerical-ShareAlike" (i.e. CC BY-NC-SA) license, basically outlining you may copy, redistribute, modify or utilise any of the code here, provided you credit, do not use it commerically and release any derivative work under the same license.
 

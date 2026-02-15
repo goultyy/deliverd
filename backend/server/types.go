@@ -65,13 +65,22 @@ type Partner struct {
 	AddressPostcode string
 	AddressCounty   string
 	AddressCountry  string
-	Status          int
+	Status          PartnerStatus
 	DateCreation    int
 	RepNameFirst    string
 	RepNameLast     string
 	RepEmail        string
 	RepPhone        string
 }
+
+type PartnerStatus int
+
+const (
+	// partner is active and can create deliveries
+	PARTNER_ACTIVE PartnerStatus = iota
+	// partner is inactive and cannot create deliveries
+	PARTNER_INACTIVE
+)
 
 // route (a courier's collection of drops)
 type Route struct {
@@ -165,3 +174,12 @@ const (
 	// route is cancelled
 	ROUTE_CANCELLED
 )
+
+type Classification struct {
+	ClassificationID int
+	Name             string
+	Description      string
+	ExpectedTime     int
+	RequiredTime     int
+	PriceGBP         float64
+}

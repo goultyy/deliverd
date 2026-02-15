@@ -11,7 +11,7 @@ func get_drop_by_id(drop_id int) (Drops, error) {
 		return Drops{}, err
 	}
 	var drop Drops
-	err = db.QueryRow("SELECT * FROM drops WHERE drop_id = ?", drop_id).Scan(&drop.DropID, &drop.PackageID, &drop.RouteID, &drop.Order)
+	err = db.QueryRow("SELECT * FROM deliverd.drops WHERE drop_id = ?", drop_id).Scan(&drop.DropID, &drop.PackageID, &drop.RouteID, &drop.Order)
 	return drop, err
 }
 
@@ -23,7 +23,7 @@ func get_drops_by_route_id(route_id int) ([]Drops, error) {
 		return drops, err
 	}
 	var drop Drops
-	rows, err := db.Query("SELECT * FROM drops WHERE route_id = ? ORDER BY order ASC", route_id)
+	rows, err := db.Query("SELECT * FROM deliverd.drops WHERE route_id = ? ORDER BY order ASC", route_id)
 	if err != nil {
 		return drops, err
 	}
@@ -53,7 +53,7 @@ func (drop Drops) new_drop() error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO drops (package_id, route_id, order) VALUES (?, ?, ?)", drop.PackageID, drop.RouteID, drop.Order)
+	_, err = db.Exec("INSERT INTO deliverd.drops (package_id, route_id, order) VALUES (?, ?, ?)", drop.PackageID, drop.RouteID, drop.Order)
 	return err
 }
 
@@ -63,7 +63,7 @@ func update_package_status(package_id int, status UpdateID) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("UPDATE packages SET status = ? WHERE package_id = ?", status, package_id)
+	_, err = db.Exec("UPDATE deliverd.packages SET status = ? WHERE package_id = ?", status, package_id)
 	return err
 }
 
@@ -73,7 +73,7 @@ func update_drop_status(drop_id, status UpdateID) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("UPDATE packages SET status = ? WHERE package_id = (SELECT package_id FROM drops WHERE drop_id = ?)", status, drop_id)
+	_, err = db.Exec("UPDATE deliverd.packages SET status = ? WHERE package_id = (SELECT package_id FROM deliverd.drops WHERE drop_id = ?)", status, drop_id)
 	return err
 }
 
@@ -84,8 +84,54 @@ func get_package_by_id(package_id int) (Packages, error) {
 		return Packages{}, err
 	}
 	var pkg Packages
-	err = db.QueryRow("SELECT * FROM packages WHERE package_id = ?", package_id).Scan(&pkg.PackageID, &pkg.PartnerID, &pkg.Description, &pkg.DateCreated, &pkg.DestinationFirst, &pkg.DestinationSecond, &pkg.DestinationPostcode, &pkg.DestinationCounty, &pkg.DestinationCountry, &pkg.RecipientNameFirst, &pkg.RecipientNameLast, &pkg.RecipientEmail, &pkg.RecipientPhone, &pkg.Classification, &pkg.Status)
+	err = db.QueryRow("SELECT * FROM deliverd.packages WHERE package_id = ?", package_id).Scan(&pkg.PackageID, &pkg.PartnerID, &pkg.Description, &pkg.DateCreated, &pkg.DestinationFirst, &pkg.DestinationSecond, &pkg.DestinationPostcode, &pkg.DestinationCounty, &pkg.DestinationCountry, &pkg.RecipientNameFirst, &pkg.RecipientNameLast, &pkg.RecipientEmail, &pkg.RecipientPhone, &pkg.Classification, &pkg.Status)
 	return pkg, err
+}
+
+// get packages by status
+func get_packages_by_status(status UpdateID) ([]Packages, error) {
+	db, err := get_db()
+	var pkgs []Packages
+	if err != nil {
+		return pkgs, err
+	}
+	var pkg Packages
+	rows, err := db.Query("SELECT * FROM deliverd.packages WHERE status = ?", status)
+	if err != nil {
+		return pkgs, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&pkg.PackageID, &pkg.PartnerID, &pkg.Description, &pkg.DateCreated, &pkg.DestinationFirst, &pkg.DestinationSecond, &pkg.DestinationPostcode, &pkg.DestinationCounty, &pkg.DestinationCountry, &pkg.RecipientNameFirst, &pkg.RecipientNameLast, &pkg.RecipientEmail, &pkg.RecipientPhone, &pkg.Classification, &pkg.Status)
+		if err != nil {
+			return pkgs, err
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs, nil
+}
+
+// get packages by partner id
+func get_packages_by_partner_id(partner_id int) ([]Packages, error) {
+	db, err := get_db()
+	var pkgs []Packages
+	if err != nil {
+		return pkgs, err
+	}
+	var pkg Packages
+	rows, err := db.Query("SELECT * FROM deliverd.packages WHERE partner_id = ?", partner_id)
+	if err != nil {
+		return pkgs, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&pkg.PackageID, &pkg.PartnerID, &pkg.Description, &pkg.DateCreated, &pkg.DestinationFirst, &pkg.DestinationSecond, &pkg.DestinationPostcode, &pkg.DestinationCounty, &pkg.DestinationCountry, &pkg.RecipientNameFirst, &pkg.RecipientNameLast, &pkg.RecipientEmail, &pkg.RecipientPhone, &pkg.Classification, &pkg.Status)
+		if err != nil {
+			return pkgs, err
+		}
+		pkgs = append(pkgs, pkg)
+	}
+	return pkgs, nil
 }
 
 // create package
@@ -94,7 +140,7 @@ func (pkg Packages) new_package() error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO packages (partner_id, description, date_created, destination_first, destination_second, destination_postcode, destination_county, destination_country, recipient_name_first, recipient_name_last, recipient_email, recipient_phone, classification, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", pkg.PartnerID, pkg.Description, pkg.DateCreated, pkg.DestinationFirst, pkg.DestinationSecond, pkg.DestinationPostcode, pkg.DestinationCounty, pkg.DestinationCountry, pkg.RecipientNameFirst, pkg.RecipientNameLast, pkg.RecipientEmail, pkg.RecipientPhone, pkg.Classification, pkg.Status)
+	_, err = db.Exec("INSERT INTO deliverd.packages (partner_id, description, date_created, destination_first, destination_second, destination_postcode, destination_county, destination_country, recipient_name_first, recipient_name_last, recipient_email, recipient_phone, classification, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", pkg.PartnerID, pkg.Description, pkg.DateCreated, pkg.DestinationFirst, pkg.DestinationSecond, pkg.DestinationPostcode, pkg.DestinationCounty, pkg.DestinationCountry, pkg.RecipientNameFirst, pkg.RecipientNameLast, pkg.RecipientEmail, pkg.RecipientPhone, pkg.Classification, pkg.Status)
 	return err
 }
 
@@ -119,7 +165,7 @@ func swap_drop_order(drop_id1, drop_id2 int) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("UPDATE drops d1 JOIN drops d2 ON d1.drop_id = ? AND d2.drop_id = ? SET d1.order = d2.order, d2.order = d1.order", drop_id1, drop_id2)
+	_, err = db.Exec("UPDATE deliverd.drops d1 JOIN deliverd.drops d2 ON d1.drop_id = ? AND d2.drop_id = ? SET d1.order = d2.order, d2.order = d1.order", drop_id1, drop_id2)
 	return err
 }
 
@@ -129,7 +175,7 @@ func (route Route) new_route() error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO routes (courier_id, status, time_created, time_completed) VALUES (?, ?, ?, 0)", route.CourierID, ROUTE_ACTIVE, get_epoch())
+	_, err = db.Exec("INSERT INTO deliverd.routes (courier_id, status, time_created, time_completed) VALUES (?, ?, ?, 0)", route.CourierID, ROUTE_ACTIVE, get_epoch())
 	return err
 }
 
@@ -139,7 +185,7 @@ func get_route_by_id(route_id int) (Route, error) {
 		return Route{}, err
 	}
 	var route Route
-	err = db.QueryRow("SELECT * FROM routes WHERE route_id = ?", route_id).Scan(&route.RouteID, &route.CourierID, &route.Status, &route.TimeCreated, &route.TimeCompleted)
+	err = db.QueryRow("SELECT * FROM deliverd.routes WHERE route_id = ?", route_id).Scan(&route.RouteID, &route.CourierID, &route.Status, &route.TimeCreated, &route.TimeCompleted)
 	return route, err
 }
 
@@ -153,7 +199,7 @@ func (update Update) new_update() error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("INSERT INTO updates (package_id, update_type, address_first, address_second, address_postcode, address_county, address_country, freeform, update_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", update.PackageID, update.UpdateType, update.AddressFirst, update.AddressSecond, update.AddressPostcode, update.AddressCounty, update.AddressCountry, update.Freeform, get_epoch())
+	_, err = db.Exec("INSERT INTO deliverd.updates (package_id, update_type, address_first, address_second, address_postcode, address_county, address_country, freeform, update_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", update.PackageID, update.UpdateType, update.AddressFirst, update.AddressSecond, update.AddressPostcode, update.AddressCounty, update.AddressCountry, update.Freeform, get_epoch())
 	if err != nil {
 		return err
 	}
@@ -169,7 +215,7 @@ func get_updates_by_package_id(package_id int) ([]Update, error) {
 		return updates, err
 	}
 	var update Update
-	rows, err := db.Query("SELECT * FROM updates WHERE package_id = ? ORDER BY update_date ASC", package_id)
+	rows, err := db.Query("SELECT * FROM deliverd.updates WHERE package_id = ? ORDER BY update_date ASC", package_id)
 	if err != nil {
 		return updates, err
 	}
