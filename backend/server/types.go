@@ -2,20 +2,21 @@ package deliverd
 
 // courier type from 'couriers' table
 type Courier struct {
-	CourierID      int
-	NameFirst      string
-	NameMiddle     string
-	NameLast       string
-	AddressFirst   string
-	AddressSecond  string
-	AddressCounty  string
-	AddressCountry string
-	PhoneNumber    string
-	Email          string
-	Status         CourierStatus
-	DateBirth      int
-	DateJoined     int
-	DateLeft       int
+	CourierID       int
+	NameFirst       string
+	NameMiddle      string
+	NameLast        string
+	AddressFirst    string
+	AddressSecond   string
+	AddressPostcode string
+	AddressCounty   string
+	AddressCountry  string
+	Email           string
+	PhoneNumber     string
+	Status          CourierStatus
+	DateBirth       int
+	DateJoined      int
+	DateLeft        int
 }
 
 // drops from 'drops', these are parcels on a route.
@@ -85,7 +86,7 @@ type Route struct {
 type Update struct {
 	UpdateID        int
 	PackageID       int
-	UpdateType      string
+	UpdateType      UpdateID
 	AddressFirst    string
 	AddressSecond   string
 	AddressPostcode string

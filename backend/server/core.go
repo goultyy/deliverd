@@ -30,3 +30,7 @@ func get_db() (*sql.DB, error) {
 
 	return db, nil
 }
+
+func get_epoch() int {
+	return int((float64)(sql.NullTime{}.Time.Unix()))
+}
