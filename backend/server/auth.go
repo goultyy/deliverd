@@ -8,7 +8,7 @@ import (
 )
 
 // get key by id
-func get_key_by_id(key_id string) (Keys, error) {
+func get_key_by_id(key_id int) (Keys, error) {
 	db, err := get_db()
 	if err != nil {
 		return Keys{}, err
@@ -20,11 +20,20 @@ func get_key_by_id(key_id string) (Keys, error) {
 
 // validate key in context of request
 func validate_key(c fiber.Ctx) error {
-	key_id := c.Get("Authorization")
-	if key_id == "" {
+	auth := c.Get("Authorization")
+	if auth == "" {
 		return errors.New("no key provided in Authorization header")
 	}
-	key, err := get_key_by_id(key_id)
+	// Extract key_id from "Bearer {id}" format
+	key_id := auth[7:] // Skip "Bearer "
+	if len(auth) < 7 || auth[:7] != "Bearer " {
+		return errors.New("invalid Authorization header format")
+	}
+	key_id_int, err := strconv.Atoi(key_id)
+	if err != nil {
+		return errors.New("invalid key_id in Authorization header")
+	}
+	key, err := get_key_by_id(key_id_int)
 	if err != nil {
 		return errors.New("error: " + err.Error())
 	}
@@ -45,7 +54,11 @@ func validate_key_with_type(c fiber.Ctx, key_type APIKeyType) error {
 	if len(auth) < 7 || auth[:7] != "Bearer " {
 		return errors.New("invalid Authorization header format")
 	}
-	key, err := get_key_by_id(key_id)
+	key_id_int, err := strconv.Atoi(key_id)
+	if err != nil {
+		return errors.New("invalid key_id in Authorization header")
+	}
+	key, err := get_key_by_id(key_id_int)
 	if err != nil {
 		return errors.New("error: " + err.Error())
 	}
@@ -56,6 +69,16 @@ func validate_key_with_type(c fiber.Ctx, key_type APIKeyType) error {
 		return errors.New("key is not of type " + strconv.Itoa(int(key_type)))
 	}
 	return nil
+}
+
+// returns if key validates at least one type
+func validate_keys_with_type(c fiber.Ctx, key_types []APIKeyType) error {
+	for _, v := range key_types {
+		if err := validate_key_with_type(c, v); err != nil {
+			return nil
+		}
+	}
+	return errors.New("matched none of " + strconv.Itoa(len(key_types)) + " keys")
 }
 
 // create a new key
@@ -109,12 +132,12 @@ func change_key_status(key_id int, status APIKeyStatus) error {
 }
 
 // get all keys belonging to owner
-func get_keys_by_owner(owner_id int) ([]Keys, error) {
+func get_keys_by_owner(owner_id int, key_type APIKeyType) ([]Keys, error) {
 	db, err := get_db()
 	if err != nil {
 		return nil, err
 	}
-	rows, err := db.Query("SELECT * FROM deliverd.keys WHERE key_owner = ?", owner_id)
+	rows, err := db.Query("SELECT * FROM deliverd.keys WHERE key_owner = ? AND key_type = ?", owner_id, key_type)
 	if err != nil {
 		return nil, err
 	}
@@ -133,11 +156,11 @@ func get_keys_by_owner(owner_id int) ([]Keys, error) {
 }
 
 // change key status by owner id
-func change_key_status_by_owner(owner_id int, new_status APIKeyStatus) error {
+func change_key_status_by_owner(owner_id int, key_type APIKeyType, new_status APIKeyStatus) error {
 	db, err := get_db()
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("UPDATE deliverd.keys SET status = ? WHERE key_owner = ?", new_status, owner_id)
+	_, err = db.Exec("UPDATE deliverd.keys SET status = ? WHERE key_owner = ? AND key_type = ?", new_status, owner_id, key_type)
 	return err
 }

@@ -3,6 +3,7 @@ package deliverd
 import "github.com/gofiber/fiber/v3"
 
 func handle_error(c fiber.Ctx, err error) error {
+	c.Status(500)
 	return c.JSON(fiber.Map{
 		"status": "error",
 		"error":  err.Error(),

@@ -4,6 +4,8 @@ drops, packages, route, updates
 */
 package deliverd
 
+import "errors"
+
 // Get drop by UniqueID
 func get_drop_by_id(drop_id int) (Drops, error) {
 	db, err := get_db()
@@ -140,6 +142,22 @@ func (pkg Packages) new_package() error {
 	if err != nil {
 		return err
 	}
+	partner, err := get_partner_by_id(pkg.PartnerID)
+	if err != nil {
+		return err
+	}
+
+	if partner.Status != PARTNER_ACTIVE {
+		return errors.New("inactive partner cannot create package")
+	}
+
+	_, err = get_classification_by_id(pkg.Classification)
+	if err != nil {
+		return err
+	}
+
+	pkg.DateCreated = get_epoch()
+	pkg.Status = UPDATE_INFORMED_SENDER
 	_, err = db.Exec("INSERT INTO deliverd.packages (partner_id, description, date_created, destination_first, destination_second, destination_postcode, destination_county, destination_country, recipient_name_first, recipient_name_last, recipient_email, recipient_phone, classification, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", pkg.PartnerID, pkg.Description, pkg.DateCreated, pkg.DestinationFirst, pkg.DestinationSecond, pkg.DestinationPostcode, pkg.DestinationCounty, pkg.DestinationCountry, pkg.RecipientNameFirst, pkg.RecipientNameLast, pkg.RecipientEmail, pkg.RecipientPhone, pkg.Classification, pkg.Status)
 	return err
 }

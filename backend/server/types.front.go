@@ -29,3 +29,18 @@ type B_Partner struct {
 	RepEmail        string `json:"rep_email" validate:"required,email"`
 	RepPhone        string `json:"rep_phone" validate:"required"`
 }
+
+type B_Package struct {
+	PartnerID           int
+	Description         string
+	DestinationFirst    string
+	DestinationSecond   string
+	DestinationPostcode string
+	DestinationCounty   string
+	DestinationCountry  string
+	RecipientNameFirst  string
+	RecipientNameLast   string
+	RecipientEmail      string
+	RecipientPhone      string
+	Classification      int
+}

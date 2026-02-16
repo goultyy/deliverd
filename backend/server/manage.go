@@ -58,7 +58,7 @@ func (courier Courier) mark_leave() error {
 		return err
 	}
 	_, err = db.Exec("UPDATE deliverd.couriers SET status = ? WHERE courier_id = ?", COURIER_ON_LEAVE, courier.CourierID)
-	change_key_status_by_owner(courier.CourierID, STATUS_INACTIVE)
+	change_key_status_by_owner(courier.CourierID, KEY_COURIER, STATUS_INACTIVE)
 	return err
 }
 
@@ -67,7 +67,7 @@ func (courier Courier) mark_active() error {
 	if courier.Status != COURIER_ON_LEAVE {
 		return errors.New("courier is not presently on leave and therefore cannot be marked as active")
 	}
-	change_key_status_by_owner(courier.CourierID, STATUS_ACTIVE)
+	change_key_status_by_owner(courier.CourierID, KEY_COURIER, STATUS_ACTIVE)
 	db, err := get_db()
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (courier Courier) mark_active() error {
 // this will mark the courier as having left (cannot be undone)
 func (courier Courier) mark_left() error {
 	db, err := get_db()
-	change_key_status_by_owner(courier.CourierID, STATUS_INACTIVE)
+	change_key_status_by_owner(courier.CourierID, KEY_COURIER, STATUS_INACTIVE)
 	if err != nil {
 		return err
 	}
@@ -113,9 +113,9 @@ func change_partner_status(partner_id int, status PartnerStatus) error {
 	}
 
 	if status == PARTNER_ACTIVE {
-		change_key_status_by_owner(partner_id, STATUS_ACTIVE)
+		change_key_status_by_owner(partner_id, KEY_PARTNER, STATUS_ACTIVE)
 	} else {
-		change_key_status_by_owner(partner_id, STATUS_INACTIVE)
+		change_key_status_by_owner(partner_id, KEY_PARTNER, STATUS_INACTIVE)
 	}
 	_, err = db.Exec("UPDATE deliverd.partners SET status = ? WHERE partners_id = ?", status, partner.PartnersID)
 	return err

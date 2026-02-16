@@ -48,7 +48,11 @@ func h_get_key_by_owner(c fiber.Ctx) error {
 	if err != nil {
 		return handle_error_special(c, 400, err)
 	}
-	keys, err := get_keys_by_owner(owner_id)
+	key_type, err := strconv.Atoi(c.Params("key_type"))
+	if err != nil {
+		return handle_error_special(c, 400, err)
+	}
+	keys, err := get_keys_by_owner(owner_id, APIKeyType(key_type))
 	if err != nil {
 		return handle_error(c, err)
 	}
